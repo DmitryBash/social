@@ -11,9 +11,9 @@ import (
 )
 
 type CreatePostPayload struct {
-	Title   string   `json:title`
-	Content string   `json:content`
-	Tags    []string `json:tags`
+	Title   string   `json:"title" validate:"required,max=100"`
+	Content string   `json:"content" validate:"required,max=1000"`
+	Tags    []string `json:"tags"`
 }
 
 func (app *application) createPostsHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,6 +22,12 @@ func (app *application) createPostsHandler(w http.ResponseWriter, r *http.Reques
 		app.badRequestResponse(w, r, err)
 		return
 	}
+
+	if err := Validate.Struct(paylod); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
 	post := &store.Post{
 		Title:   paylod.Title,
 		Content: paylod.Content,
