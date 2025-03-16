@@ -49,3 +49,26 @@ func (s *CommentsStore) GetByPostID(ctx context.Context, postID int64) ([]Commen
 
 	return comments, nil
 }
+
+func (s *CommentsStore) Create(ctx context.Context, comment *Comment) error {
+	query := `
+			INSERT INTO comments (post_id, user_id, content)
+			values ($1, $2, $3) RETURNING id, created_at, updated_at
+		`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		comment.PostID,
+		comment.UserID,
+		comment.Content,
+	).Scan(&comment.ID, &comment.CreatedAt, &comment.UpdatedAt)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
